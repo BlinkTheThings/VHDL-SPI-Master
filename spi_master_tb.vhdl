@@ -35,10 +35,10 @@ architecture tb of spi_master_tb is
     signal o_mosi       : std_logic;
     signal i_miso       : std_logic;
 
-    signal TbClock : std_logic := '0';
-    signal TbSimEnded : std_logic := '0';
+    signal tb_clock     : std_logic := '0';
+    signal tb_done      : std_logic := '0';
 
-    constant TbPeriod : time := 1000 ns;
+    constant TB_PERIOD  : time := 1000 ns;
 begin
     dut : spi_master
     port map (
@@ -54,8 +54,8 @@ begin
         i_miso      => i_miso
     );
 
-    TbClock <= not TbClock after TbPeriod/2 when TbSimEnded /= '1' else '0';
-    i_clk <= TbClock;
+    tb_clock <= not tb_clock after TB_PERIOD/2 when tb_done /= '1' else '0';
+    i_clk <= tb_clock;
 
     process
     begin
@@ -63,18 +63,28 @@ begin
         i_tx_data <= x"A5";
 
         i_reset <= '1';
-        wait for 2 * TbPeriod;
+        wait for 2 * TB_PERIOD;
         i_reset <= '0';
 
         i_enable <= '0';
-        wait for 2 * TbPeriod;
+        wait for 2 * TB_PERIOD;
         i_enable <= '1';
-        wait for TbPeriod;
+        wait for TB_PERIOD;
         i_enable <= '0';
 
-        wait for 100 * TbPeriod;
+        wait for 20 * TB_PERIOD;
 
-        TbSimEnded <= '1';
+        i_miso <= '0';
+        i_tx_data <= x"3C";
+        i_enable <= '0';
+        wait for 2 * TB_PERIOD;
+        i_enable <= '1';
+        wait for TB_PERIOD;
+        i_enable <= '0';
+
+        wait for 20 * TB_PERIOD;
+
+        tb_done <= '1';
         wait;
     end process;
 
